@@ -19,7 +19,7 @@ import (
 // Settings specify initial startup parameters for Start and StartConf.
 type Settings struct {
 	Host string `envconfig:"HOST" default:"0.0.0.0"`
-	Port string `envconfig:"PORT" default:"7447"`
+	Port string `envconfig:"PORT" default:"8080"`
 }
 
 // Start calls StartConf with Settings parsed from the process environment.
