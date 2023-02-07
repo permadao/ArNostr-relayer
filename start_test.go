@@ -2,6 +2,8 @@ package relayer
 
 import (
 	"context"
+	"github.com/nbd-wtf/go-nostr/nip19"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
@@ -103,4 +105,42 @@ func TestServerShutdownWebsocket(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Error("client took too long to disconnect")
 	}
+}
+
+func TestNewServer(t *testing.T) {
+	relay, err := nostr.RelayConnect(context.Background(), "ws://127.0.0.1:7447")
+	if err != nil {
+		panic(err)
+	}
+	sk := nostr.GeneratePrivateKey()
+	pub, _ := nostr.GetPublicKey(sk)
+	nsec, _ := nip19.EncodePrivateKey(sk)
+	npub, _ := nip19.EncodePublicKey(pub)
+	t.Log("nsec: ", nsec)
+	t.Log("npub: ", npub)
+	ev := nostr.Event{
+		PubKey:    pub,
+		CreatedAt: time.Now(),
+		Kind:      1,
+		Tags:      nil,
+		Content:   "sandy111 test golang relay",
+	}
+
+	// calling Sign sets the event ID field and the event Sig field
+	ev.Sign(sk)
+	status := relay.Publish(context.Background(), ev)
+	t.Log(status)
+}
+
+func TestServer_Addr(t *testing.T) {
+	nsec := "nsec1nhu4cvac38e4elxypma2nxajzgnrjnfpk5t27xz2urxxu7d0js0ss7whq7"
+	npub := "npub1sh8576r3wudxhth24a2x59ezq7fu882akwg7zwa62rq7kt7dp5mqc7nh04"
+	_, v, err := nip19.Decode(nsec)
+	assert.NoError(t, err)
+	t.Log(v.(string))
+
+	_, v, err = nip19.Decode(npub)
+	assert.NoError(t, err)
+	t.Log(v.(string))
+
 }

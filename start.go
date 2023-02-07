@@ -80,6 +80,7 @@ func NewServer(addr string, relay Relay) *Server {
 	}
 	srv.router.Path("/").Headers("Upgrade", "websocket").HandlerFunc(srv.handleWebsocket)
 	srv.router.Path("/").Headers("Accept", "application/nostr+json").HandlerFunc(srv.handleNIP11)
+	srv.router.Path("/info").HandlerFunc(srv.handleNIP11)
 	return srv
 }
 

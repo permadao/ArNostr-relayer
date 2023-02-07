@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/cockroachdb/pebble v0.0.0-20220723153705-3fc374e4dc66
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
@@ -17,6 +18,7 @@ require (
 	github.com/rif/cache2go v1.0.0
 	github.com/rs/cors v1.7.0
 	github.com/stevelacy/daz v0.1.4
+	github.com/stretchr/testify v1.7.1
 	github.com/tidwall/gjson v1.14.1
 	golang.org/x/exp v0.0.0-20221106115401-f9659909a136
 )
@@ -71,6 +73,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
@@ -79,4 +82,5 @@ require (
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

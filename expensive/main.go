@@ -88,6 +88,7 @@ func main() {
 		log.Fatalf("failed to read from env: %v", err)
 		return
 	}
+	r.PostgresDatabase = "postgres://postgres:123456@127.0.0.1:5432/nostr_relay?sslmode=disable"
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	if err := relayer.Start(&r); err != nil {
 		log.Fatalf("server terminated: %v", err)
