@@ -19,6 +19,6 @@ compiling
 
 if you know Go you already know this:
 
-    go install github.com/fiatjaf/relayer/basic
+    go install github.com/permadao/ArNostr-relayer/basic
 
 or something like that.

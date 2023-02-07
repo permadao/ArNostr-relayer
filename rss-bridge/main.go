@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/cockroachdb/pebble"
-	"github.com/fiatjaf/relayer"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/permadao/ArNostr-relayer"
 	"golang.org/x/exp/slices"
 )
 

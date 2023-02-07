@@ -21,6 +21,6 @@ compiling
 
 if you know Go you already know this:
 
-    go install github.com/fiatjaf/relayer/rss-bridge
+    go install github.com/permadao/ArNostr-relayer/rss-bridge
 
 or something like that.

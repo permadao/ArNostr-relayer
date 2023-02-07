@@ -1,4 +1,4 @@
-module github.com/fiatjaf/relayer
+module github.com/permadao/ArNostr-relayer
 
 go 1.18
 

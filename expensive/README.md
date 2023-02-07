@@ -26,6 +26,6 @@ compiling
 
 if you know Go you already know this:
 
-    go install github.com/fiatjaf/relayer/expensive
+    go install github.com/permadao/ArNostr-relayer/expensive
 
 or something like that.

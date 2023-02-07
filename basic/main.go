@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/fiatjaf/relayer"
-	"github.com/fiatjaf/relayer/storage/postgresql"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/permadao/ArNostr-relayer"
+	"github.com/permadao/ArNostr-relayer/storage/postgresql"
 )
 
 type Relay struct {

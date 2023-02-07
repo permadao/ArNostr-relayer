@@ -122,7 +122,7 @@ func TestNewServer(t *testing.T) {
 		PubKey:    pub,
 		CreatedAt: time.Now(),
 		Kind:      1,
-		Tags:      nil,
+		Tags:      nostr.Tags{[]string{"foo", "bar"}},
 		Content:   "sandy111 test golang relay",
 	}
 

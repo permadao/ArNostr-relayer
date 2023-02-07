@@ -3,8 +3,8 @@ package postgresql
 import (
 	"encoding/json"
 
-	"github.com/fiatjaf/relayer/storage"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/permadao/ArNostr-relayer/storage"
 )
 
 func (b *PostgresBackend) SaveEvent(evt *nostr.Event) error {

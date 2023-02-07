@@ -3,8 +3,8 @@ package relayer
 import (
 	"fmt"
 
-	"github.com/fiatjaf/relayer/storage"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/permadao/ArNostr-relayer/storage"
 )
 
 func AddEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {

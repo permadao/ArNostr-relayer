@@ -319,7 +319,7 @@ func (s *Server) handleNIP11(w http.ResponseWriter, r *http.Request) {
 		PubKey:        "~",
 		Contact:       "~",
 		SupportedNIPs: supportedNIPs,
-		Software:      "https://github.com/fiatjaf/relayer",
+		Software:      "https://github.com/permadao/ArNostr-relayer",
 		Version:       "~",
 	}
 
