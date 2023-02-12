@@ -124,7 +124,7 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 					notice = "request has less than 2 parameters"
 					return
 				}
-
+				// fmt.Printf("%s",request[1])
 				var typ string
 				json.Unmarshal(request[0], &typ)
 
@@ -152,6 +152,8 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						ws.WriteJSON([]interface{}{"OK", evt.ID, false, "invalid: signature is invalid"})
 						return
 					}
+					// upload event to ar
+					s.relay.ArweaveStorge().SaveEvent(&evt)
 
 					if evt.Kind == 5 {
 						// event deletion -- nip09

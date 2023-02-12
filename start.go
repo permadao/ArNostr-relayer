@@ -30,6 +30,31 @@ func Start(relay Relay) error {
 	}
 	return StartConf(s, relay)
 }
+func Restore(relay Relay) {
+	go func() {
+		filter := StorgeFilter{
+			PageNum: 10,
+		}
+		for {
+			queryEvents, err := relay.ArweaveStorge().QueryEvents(&filter)
+			if err != nil {
+				log.Fatalf("restore event error:%v", err)
+			}
+			for _, event := range queryEvents.Events {
+				isSuccess, msg := RestoreEvent(relay, event)
+				if !isSuccess {
+					log.Fatalf("restore event error:%s", msg)
+				}
+			}
+			if !queryEvents.HasNextPage {
+				return
+			}
+			filter.Cursor = queryEvents.Cursor
+		}
+
+	}()
+
+}
 
 // StartConf creates a new Server, passing it host:port for the address,
 // and starts serving propagating any error returned from [Server.Start].
