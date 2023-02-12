@@ -31,7 +31,7 @@ func Start(relay Relay) error {
 	return StartConf(s, relay)
 }
 func Restore(relay Relay) {
-	go func() {
+	{
 		filter := StorgeFilter{
 			PageNum: 10,
 		}
@@ -52,7 +52,7 @@ func Restore(relay Relay) {
 			filter.Cursor = queryEvents.Cursor
 		}
 
-	}()
+	}
 
 }
 

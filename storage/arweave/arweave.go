@@ -140,6 +140,7 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 		}
 	}`, filter.PageNum, after, b.Owner, b.Owner)
 	data, err := client.GraphQL(querySql)
+	fmt.Printf("%s", data)
 	loops := 10
 	for i := 0; i < loops && err != nil; i++ {
 		data, err = client.GraphQL(querySql)
