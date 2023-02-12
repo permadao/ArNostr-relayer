@@ -91,7 +91,6 @@ func main() {
 		Currency:      "usdc",
 		GraphEndpoint: "https://arweave.net",
 	}
-	relayer.Restore(&r)
 	if err := relayer.Start(&r); err != nil {
 		log.Fatalf("server terminated: %v", err)
 	}

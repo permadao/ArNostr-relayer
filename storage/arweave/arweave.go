@@ -140,7 +140,7 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 		}
 	}`, filter.PageNum, after, b.Owner, b.Owner)
 	data, err := client.GraphQL(querySql)
-	fmt.Printf("%s", data)
+	// fmt.Printf("%s", data)
 	loops := 10
 	for i := 0; i < loops && err != nil; i++ {
 		data, err = client.GraphQL(querySql)
@@ -149,19 +149,22 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 	if err != nil {
 		return nil, err
 	} else {
-		var transactions Transaction
+		var transactions Transactions
 		err = json.Unmarshal(data, &transactions)
 		if err != nil {
 			return nil, err
 		}
+		// fmt.Printf("data:%s", data)
+		// fmt.Printf("transactions:%v", transactions)
 		var queryEvents relayer.QueryEvents
-		queryEvents.HasNextPage = transactions.HasNextPage
-		edges := transactions.Edges
+		queryEvents.HasNextPage = transactions.Transaction.HasNextPage
+		edges := transactions.Transaction.Edges
 
 		var events []nostr.Event
 		var content []byte
 		for _, edge := range edges {
 			id := edge.Node.Id
+			// fmt.Println("id:" + id)
 			if content, err = utils.DoGet(b.SeedUrl + "/" + id); err != nil {
 				log.Println(err)
 				return nil, err
@@ -177,6 +180,7 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 		if len(edges) > 0 {
 			queryEvents.Cursor = edges[len(edges)-1].Cursor
 		}
+		// fmt.Printf("%v", queryEvents)
 		return &queryEvents, nil
 	}
 }

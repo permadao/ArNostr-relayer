@@ -24,13 +24,13 @@ func (b *PostgresBackend) RestoreEvent(evt *nostr.Event, isDelete bool) error {
         INSERT INTO event (id, pubkey, created_at, kind, tags, content, sig)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (id) DO UPDATE 
-		SET create_at = $3, 
+		SET created_at = $3, 
 			kind = $4,
 			tags = $5,
 			content =$6,
 			sig =$7,
 			is_delete = $8
-		where create_at <$3 and  pubkey=$2
+		where event.created_at <$3 and  event.pubkey=$2
     `, evt.ID, evt.PubKey, evt.CreatedAt.Unix(), evt.Kind, tagsj, evt.Content, evt.Sig, isDelete)
 	if err != nil {
 		return err

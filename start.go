@@ -28,9 +28,18 @@ func Start(relay Relay) error {
 	if err := envconfig.Process("", &s); err != nil {
 		return fmt.Errorf("envconfig: %w", err)
 	}
+	// init the relay
+	if err := relay.Init(); err != nil {
+		return fmt.Errorf("relay init: %w", err)
+	}
+	if err := relay.Storage().Init(); err != nil {
+		return fmt.Errorf("storage init: %w", err)
+	}
+	Restore(relay)
 	return StartConf(s, relay)
 }
 func Restore(relay Relay) {
+
 	{
 		filter := StorgeFilter{
 			PageNum: 10,
@@ -41,6 +50,7 @@ func Restore(relay Relay) {
 				log.Fatalf("restore event error:%v", err)
 			}
 			for _, event := range queryEvents.Events {
+				// fmt.Printf("%v", event)
 				isSuccess, msg := RestoreEvent(relay, event)
 				if !isSuccess {
 					log.Fatalf("restore event error:%s", msg)
@@ -152,13 +162,13 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startListener(ln net.Listener) error {
-	// init the relay
-	if err := s.relay.Init(); err != nil {
-		return fmt.Errorf("relay init: %w", err)
-	}
-	if err := s.relay.Storage().Init(); err != nil {
-		return fmt.Errorf("storage init: %w", err)
-	}
+	// // init the relay
+	// if err := s.relay.Init(); err != nil {
+	// 	return fmt.Errorf("relay init: %w", err)
+	// }
+	// if err := s.relay.Storage().Init(); err != nil {
+	// 	return fmt.Errorf("storage init: %w", err)
+	// }
 
 	// push events from implementations, if any
 	if inj, ok := s.relay.(Injector); ok {
