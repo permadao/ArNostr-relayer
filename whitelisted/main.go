@@ -6,7 +6,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
-	"github.com/permadao/ArNostr-relayer"
+	relayer "github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage/postgresql"
 )
 
@@ -53,6 +53,7 @@ func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
 	return true
 }
 
+// merge
 func main() {
 	r := Relay{}
 	if err := envconfig.Process("", &r); err != nil {
