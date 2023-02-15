@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
-	"github.com/permadao/ArNostr-relayer"
+	relayer "github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage/postgresql"
 )
 
@@ -48,6 +49,16 @@ func (r *Relay) Init() error {
 }
 
 func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
+
+	// key world filter
+	keyswords := []string{"交流群", "QQ群", "讨论群", "同城约炮", "买粉", "增粉", "加群", "高胜率", "在线接单", " Join Group", "Free Airdrop", "damus群", "lnbc5u1p37kd3qpp5st9jjtrz8vfv2hpz2x2tqwx"}
+	for _, kw := range keyswords {
+		if strings.Contains(evt.Content, kw) {
+
+			return false
+		}
+	}
+
 	// block events that are too large
 	jsonb, _ := json.Marshal(evt)
 	if len(jsonb) > 10000 {
