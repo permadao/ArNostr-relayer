@@ -3,7 +3,7 @@ version = "0.1.0"
 
 [service]
     host = "0.0.0.0"
-	port = "2333"
+	port = "8080"
 
 [arweave]
 	pk = "your priv key"
