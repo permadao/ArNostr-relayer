@@ -2,36 +2,33 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"crypto/sha256"
+
 	"github.com/everFinance/goar/utils"
 	"github.com/everFinance/goether"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
-	"github.com/permadao/ArNostr-relayer"
+	relayer "github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage/arweave"
-
 	"github.com/permadao/ArNostr-relayer/storage/postgresql"
+	"github.com/spf13/viper"
 )
 
 type Relay struct {
-	PostgresDatabase string   `envconfig:"POSTGRESQL_DATABASE"`
-	Whitelist        []string `envconfig:"WHITELIST"`
-	ArPrivateKey     string   `envconfig:"ARPRIVATEKEY"`
+	PostgresDatabase string
+	Whitelist        []string
+	Version          string
 	arweaveStorge    *arweave.ArweaveBackend
-	// IsEnableArstorge  bool
-	storage     *postgresql.PostgresBackend
-	relayConfig *relayer.RelayConfig
+	storage          *postgresql.PostgresBackend
 }
 
 func (r *Relay) Name() string {
-	// data := []byte(r.ArPrivateKey)
-	// hashValue := md5.Sum(data)
-	// name := fmt.Sprintf("%x", hashValue)
-	name := "ArNostr"
-	if len(r.ArPrivateKey) > 0 {
-		s, _ := goether.NewSigner(r.ArPrivateKey)
+	name := viper.GetString("appname")
+	pk := viper.GetString("arweave.pk")
+	if len(pk) > 0 {
+		s, _ := goether.NewSigner(pk)
 		addr := sha256.Sum256(s.GetPublicKey())
 		name = utils.Base64Encode(addr[:])
 	}
@@ -53,7 +50,6 @@ func (r *Relay) Init() error {
 }
 
 func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
-
 	// block events that are too large
 	jsonb, _ := json.Marshal(evt)
 	if len(jsonb) > 100000 {
@@ -76,31 +72,30 @@ func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
 	}
 	return true
 }
-func (r *Relay) RelayConfig() *relayer.RelayConfig {
-	return r.relayConfig
-}
 
 // merge
 func main() {
-	r := Relay{}
-	if err := envconfig.Process("", &r); err != nil {
-		log.Fatalf("failed to read from env: %v", err)
-		return
+	// Read configs
+	viper.SetConfigName("config")
+	viper.SetConfigType("toml")
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Sprintf("read config failed: %s", err.Error()))
 	}
-	config, err := relayer.NewConfig()
-	if err != nil {
-		log.Fatalf("failed to read from env: %v", err)
-		return
+
+	// relay
+	r := Relay{
+		PostgresDatabase: viper.GetString("postgresql_db.url"),
+		Version:          viper.GetString("service.version"),
 	}
-	r.relayConfig = config
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	r.arweaveStorge = &arweave.ArweaveBackend{
-		Owner:         r.Name(),
-		PayUrl:        "https://api.everpay.io",
-		SeedUrl:       "https://arseed.web3infra.dev",
-		PrivateKey:    r.ArPrivateKey,
-		Currency:      "usdc",
-		GraphEndpoint: "https://arweave.net",
+		Owner:         viper.GetString("appname"),
+		PayUrl:        viper.GetString("arweave.everpay_url"),
+		SeedUrl:       viper.GetString("arweave.arseed_url"),
+		PrivateKey:    viper.GetString("arweave.pk"),
+		Currency:      viper.GetString("arweave.pay_currency"),
+		GraphEndpoint: viper.GetString("arweave.graph_endpint"),
 	}
 	if err := relayer.Start(&r); err != nil {
 		log.Fatalf("server terminated: %v", err)

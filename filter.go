@@ -6,7 +6,7 @@ import (
 
 type StorgeFilter struct {
 	Cursor    string
-	PageNum   int8
+	PageNum   int
 	RelayName string
 }
 type QueryEvents struct {

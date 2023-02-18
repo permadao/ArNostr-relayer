@@ -3,11 +3,12 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/everFinance/goar"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/permadao/ArNostr-relayer"
 	"log"
 	"time"
+
+	"github.com/everFinance/goar"
+	"github.com/nbd-wtf/go-nostr"
+	relayer "github.com/permadao/ArNostr-relayer"
 )
 
 type ArweaveBackend struct {

@@ -1,0 +1,18 @@
+appname = "ArNostr"
+version = "0.1.0"
+
+[service]
+    host = "0.0.0.0"
+	port = "2333"
+
+[arweave]
+	pk = "your priv key"
+	everpay_url = "https://api.everpay.io"
+	arseed_url = "https://arseed.web3infra.dev"
+    pay_currency = "usdc"
+    graph_endpint = "https://arweave.net"
+    enable_restore = true
+    batchSize =  10
+
+[postgresql_db]
+	url = "host=localhost port=5432 user=postgres password=123 dbname=postgres sslmode=disable"
