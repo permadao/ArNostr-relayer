@@ -136,7 +136,7 @@ func (b PostgresBackend) QueryEvents(filter *nostr.Filter) (events []nostr.Event
 
 	query := b.DB.Rebind(`SELECT
       id, pubkey, created_at, kind, tags, content, sig
-    FROM event WHERE ` +
+    FROM event WHERE  is_delete=false AND ` +
 		strings.Join(conditions, " AND ") +
 		" ORDER BY created_at DESC LIMIT ?")
 

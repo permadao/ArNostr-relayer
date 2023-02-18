@@ -28,7 +28,41 @@ func Start(relay Relay) error {
 	if err := envconfig.Process("", &s); err != nil {
 		return fmt.Errorf("envconfig: %w", err)
 	}
+	// init the relay
+	if err := relay.Init(); err != nil {
+		return fmt.Errorf("relay init: %w", err)
+	}
+	if err := relay.Storage().Init(); err != nil {
+		return fmt.Errorf("storage init: %w", err)
+	}
+	if relay.RelayConfig().Enable {
+		Restore(relay)
+	}
+
 	return StartConf(s, relay)
+}
+func Restore(relay Relay) {
+	batchSize := relay.RelayConfig().BatchSize
+	filter := StorgeFilter{
+		PageNum: batchSize,
+	}
+	for {
+		queryEvents, err := relay.BackupStorage().QueryEvents(&filter)
+		if err != nil {
+			log.Fatalf("restore event error:%v", err)
+		}
+		for _, event := range queryEvents.Events {
+			// fmt.Printf("%v", event)
+			isSuccess, msg := RestoreEvent(relay, event)
+			if !isSuccess {
+				log.Fatalf("restore event error:%s", msg)
+			}
+		}
+		if !queryEvents.HasNextPage {
+			return
+		}
+		filter.Cursor = queryEvents.Cursor
+	}
 }
 
 // StartConf creates a new Server, passing it host:port for the address,
@@ -127,13 +161,13 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startListener(ln net.Listener) error {
-	// init the relay
-	if err := s.relay.Init(); err != nil {
-		return fmt.Errorf("relay init: %w", err)
-	}
-	if err := s.relay.Storage().Init(); err != nil {
-		return fmt.Errorf("storage init: %w", err)
-	}
+	// // init the relay
+	// if err := s.relay.Init(); err != nil {
+	// 	return fmt.Errorf("relay init: %w", err)
+	// }
+	// if err := s.relay.Storage().Init(); err != nil {
+	// 	return fmt.Errorf("storage init: %w", err)
+	// }
 
 	// push events from implementations, if any
 	if inj, ok := s.relay.(Injector); ok {

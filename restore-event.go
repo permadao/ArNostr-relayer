@@ -6,7 +6,7 @@ import (
 	"github.com/permadao/ArNostr-relayer/storage"
 )
 
-func AddEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
+func RestoreEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
 	store := relay.Storage()
 	advancedDeleter, _ := store.(AdvancedDeleter)
 	advancedSaver, _ := store.(AdvancedSaver)
@@ -19,7 +19,7 @@ func AddEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
 					advancedDeleter.BeforeDelete(tag[1], evt.PubKey)
 				}
 
-				if err := store.DeleteEvent(tag[1], evt.PubKey); err != nil {
+				if err := store.RestoreEvent(&evt, true); err != nil {
 					return false, fmt.Sprintf("error: failed to delete: %s", err.Error())
 				}
 
@@ -42,7 +42,7 @@ func AddEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
 			advancedSaver.BeforeSave(&evt)
 		}
 
-		if saveErr := store.SaveEvent(&evt); saveErr != nil {
+		if saveErr := store.RestoreEvent(&evt, false); saveErr != nil {
 			switch saveErr {
 			case storage.ErrDupEvent:
 				return true, saveErr.Error()
@@ -56,7 +56,7 @@ func AddEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
 		}
 	}
 
-	notifyListeners(&evt)
+	// notifyListeners(&evt)
 
 	return true, ""
 }
