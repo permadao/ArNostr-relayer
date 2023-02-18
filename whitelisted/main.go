@@ -12,7 +12,6 @@ import (
 	"github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage/arweave"
 	"github.com/permadao/ArNostr-relayer/storage/postgresql"
-	// "flag"
 )
 
 type Relay struct {
@@ -21,7 +20,8 @@ type Relay struct {
 	ArPrivateKey     string   `envconfig:"ARPRIVATEKEY"`
 	arweaveStorge    *arweave.ArweaveBackend
 	// IsEnableArstorge  bool
-	storage *postgresql.PostgresBackend
+	storage     *postgresql.PostgresBackend
+	relayConfig *relayer.RelayConfig
 }
 
 func (r *Relay) Name() string {
@@ -43,7 +43,7 @@ func (r *Relay) Storage() relayer.Storage {
 	return r.storage
 }
 
-func (r *Relay) ArweaveStorge() relayer.BackupStorage {
+func (r *Relay) BackupStorage() relayer.BackupStorage {
 	return r.arweaveStorge
 }
 
@@ -75,6 +75,9 @@ func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
 	}
 	return true
 }
+func (r *Relay) RelayConfig() *relayer.RelayConfig {
+	return r.relayConfig
+}
 
 func main() {
 	r := Relay{}
@@ -82,6 +85,12 @@ func main() {
 		log.Fatalf("failed to read from env: %v", err)
 		return
 	}
+	config, err := relayer.NewConfig()
+	if err != nil {
+		log.Fatalf("failed to read from env: %v", err)
+		return
+	}
+	r.relayConfig = config
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	r.arweaveStorge = &arweave.ArweaveBackend{
 		Owner:         r.Name(),

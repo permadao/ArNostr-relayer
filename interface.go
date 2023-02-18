@@ -27,7 +27,8 @@ type Relay interface {
 	AcceptEvent(*nostr.Event) bool
 	// Storage returns the relay storage implementation.
 	Storage() Storage
-	ArweaveStorge() BackupStorage
+	BackupStorage() BackupStorage
+	RelayConfig() *RelayConfig
 }
 
 // Auther is the interface for implementing NIP-42.
@@ -93,16 +94,6 @@ type BackupStorage interface {
 
 	// SaveEvent is called once Relay.AcceptEvent reports true.
 	SaveEvent(event *nostr.Event) error
-}
-type StorgeFilter struct {
-	Cursor    string
-	PageNum   int8
-	RelayName string
-}
-type QueryEvents struct {
-	Events      []nostr.Event
-	Cursor      string
-	HasNextPage bool
 }
 
 // AdvancedQuerier methods are called before and after [Storage.QueryEvents].

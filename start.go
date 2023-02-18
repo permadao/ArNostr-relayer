@@ -35,35 +35,34 @@ func Start(relay Relay) error {
 	if err := relay.Storage().Init(); err != nil {
 		return fmt.Errorf("storage init: %w", err)
 	}
-	Restore(relay)
+	if relay.RelayConfig().Enable {
+		Restore(relay)
+	}
+
 	return StartConf(s, relay)
 }
 func Restore(relay Relay) {
-
-	{
-		filter := StorgeFilter{
-			PageNum: 10,
-		}
-		for {
-			queryEvents, err := relay.ArweaveStorge().QueryEvents(&filter)
-			if err != nil {
-				log.Fatalf("restore event error:%v", err)
-			}
-			for _, event := range queryEvents.Events {
-				// fmt.Printf("%v", event)
-				isSuccess, msg := RestoreEvent(relay, event)
-				if !isSuccess {
-					log.Fatalf("restore event error:%s", msg)
-				}
-			}
-			if !queryEvents.HasNextPage {
-				return
-			}
-			filter.Cursor = queryEvents.Cursor
-		}
-
+	batchSize := relay.RelayConfig().BatchSize
+	filter := StorgeFilter{
+		PageNum: batchSize,
 	}
-
+	for {
+		queryEvents, err := relay.BackupStorage().QueryEvents(&filter)
+		if err != nil {
+			log.Fatalf("restore event error:%v", err)
+		}
+		for _, event := range queryEvents.Events {
+			// fmt.Printf("%v", event)
+			isSuccess, msg := RestoreEvent(relay, event)
+			if !isSuccess {
+				log.Fatalf("restore event error:%s", msg)
+			}
+		}
+		if !queryEvents.HasNextPage {
+			return
+		}
+		filter.Cursor = queryEvents.Cursor
+	}
 }
 
 // StartConf creates a new Server, passing it host:port for the address,

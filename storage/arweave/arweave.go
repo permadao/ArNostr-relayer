@@ -3,16 +3,10 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/everFinance/arseeding/sdk"
-	"github.com/everFinance/arseeding/sdk/schema"
 	"github.com/everFinance/goar"
-	"github.com/everFinance/goar/types"
-	"github.com/everFinance/goether"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/permadao/ArNostr-relayer"
-	"github.com/permadao/ArNostr-relayer/utils"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -35,68 +29,19 @@ type Edge struct {
 	Cursor string `json:"cursor"`
 	Node   `json:"node"`
 }
-type Transaction struct {
+type Transactions struct {
 	PageInfo `json:"pageInfo"`
 	Edges    []Edge `json:"edges"`
 }
-type Transactions struct {
-	Transaction `json:"transactions"`
+type QueryTransactions struct {
+	Transactions `json:"transactions"`
 }
 
 func (b *ArweaveBackend) Init() error {
 	return nil
 }
 func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) error {
-
-	eccSigner, err := goether.NewSigner(b.PrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	sdk, err := sdk.NewSDK(b.SeedUrl, b.PayUrl, eccSigner)
-	if err != nil {
-		panic(err)
-	}
-	uploadTime := strconv.FormatInt(time.Now().UnixNano(), 10)
-	eventTime := strconv.FormatInt(evt.CreatedAt.UnixNano(), 10)
-	// fmt.Println(b.Owner)
-	tags := []types.Tag{
-		{
-			Name:  "Content-Type",
-			Value: "application/json",
-		},
-		{
-			Name:  "App-Name",
-			Value: "ArNostr",
-		},
-		{
-			Name:  "App-Vesion",
-			Value: "0.1",
-		},
-		{
-			Name:  "Relay-Name",
-			Value: b.Owner,
-		},
-		{
-			Name:  "Pubkey",
-			Value: evt.PubKey,
-		},
-		{
-			Name:  "Create-Time",
-			Value: uploadTime,
-		},
-		{
-			Name:  "Event-Time",
-			Value: eventTime,
-		},
-	}
-	event, err := json.Marshal(evt)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	tx, itemId, err := sdk.SendDataAndPay(event, b.Currency, &schema.OptionItem{Tags: tags}, false) // your account must have enough balance in everpay
-	fmt.Printf("itemId:%s", itemId)
-	fmt.Printf("hash:%s", tx.HexHash())
+	_, _, err := UploadLoadEvent(b, evt)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -104,7 +49,7 @@ func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) error {
 	return nil
 }
 
-func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relayer.QueryEvents, err error) {
+func (b *ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relayer.QueryEvents, err error) {
 
 	client := goar.NewClient(b.GraphEndpoint)
 	after := ""
@@ -149,7 +94,7 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 	if err != nil {
 		return nil, err
 	} else {
-		var transactions Transactions
+		var transactions QueryTransactions
 		err = json.Unmarshal(data, &transactions)
 		if err != nil {
 			return nil, err
@@ -157,24 +102,17 @@ func (b ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relay
 		// fmt.Printf("data:%s", data)
 		// fmt.Printf("transactions:%v", transactions)
 		var queryEvents relayer.QueryEvents
-		queryEvents.HasNextPage = transactions.Transaction.HasNextPage
-		edges := transactions.Transaction.Edges
+		queryEvents.HasNextPage = transactions.Transactions.HasNextPage
+		edges := transactions.Transactions.Edges
 
 		var events []nostr.Event
-		var content []byte
 		for _, edge := range edges {
 			id := edge.Node.Id
-			// fmt.Println("id:" + id)
-			if content, err = utils.DoGet(b.SeedUrl + "/" + id); err != nil {
-				log.Println(err)
-				return nil, err
+			evt, err := DownLoadContentById(b, id)
+			if err != nil {
+				panic(err)
 			}
-			var evt nostr.Event
-			if err = json.Unmarshal(content, &evt); err != nil {
-				log.Println(err)
-				return nil, err
-			}
-			events = append(events, evt)
+			events = append(events, *evt)
 		}
 		queryEvents.Events = events
 		if len(edges) > 0 {
