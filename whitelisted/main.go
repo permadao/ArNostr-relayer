@@ -11,6 +11,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage/arweave"
+
 	"github.com/permadao/ArNostr-relayer/storage/postgresql"
 )
 
@@ -79,6 +80,7 @@ func (r *Relay) RelayConfig() *relayer.RelayConfig {
 	return r.relayConfig
 }
 
+// merge
 func main() {
 	r := Relay{}
 	if err := envconfig.Process("", &r); err != nil {
