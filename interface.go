@@ -27,8 +27,8 @@ type Relay interface {
 	AcceptEvent(*nostr.Event) bool
 	// Storage returns the relay storage implementation.
 	Storage() Storage
+
 	BackupStorage() BackupStorage
-	RelayConfig() *RelayConfig
 }
 
 // Auther is the interface for implementing NIP-42.
