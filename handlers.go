@@ -153,7 +153,9 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					// upload event to ar
-					s.relay.BackupStorage().SaveEvent(&evt)
+					if s.relay.AcceptEvent(&evt) {
+						go s.relay.BackupStorage().SaveEvent(&evt)
+					}
 
 					if evt.Kind == 5 {
 						// event deletion -- nip09
