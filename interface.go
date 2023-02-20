@@ -80,7 +80,10 @@ type Storage interface {
 	DeleteEvent(id string, pubkey string) error
 	// SaveEvent is called once Relay.AcceptEvent reports true.
 	SaveEvent(event *nostr.Event) error
+	// RestoreEvent will load the event on the backup storage and store it
 	RestoreEvent(event *nostr.Event, isDelete bool) error
+	// UpdateItemId update the itemid used by backup storage
+	UpdateItemId(event *nostr.Event, itemid string) error
 }
 
 // Storage is a persistence layer for nostr events handled by a relay.
@@ -93,7 +96,7 @@ type BackupStorage interface {
 	QueryEvents(filter *StorgeFilter) (events *QueryEvents, err error)
 
 	// SaveEvent is called once Relay.AcceptEvent reports true.
-	SaveEvent(event *nostr.Event) error
+	SaveEvent(event *nostr.Event) (string, error)
 }
 
 // AdvancedQuerier methods are called before and after [Storage.QueryEvents].

@@ -3,6 +3,10 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"strconv"
+	"time"
+
 	"github.com/everFinance/arseeding/sdk"
 	"github.com/everFinance/arseeding/sdk/schema"
 	paySchema "github.com/everFinance/everpay-go/pay/schema"
@@ -10,9 +14,6 @@ import (
 	"github.com/everFinance/goar/types"
 	"github.com/everFinance/goether"
 	"github.com/nbd-wtf/go-nostr"
-	"log"
-	"strconv"
-	"time"
 )
 
 func initSdk(b *ArweaveBackend) (*sdk.SDK, error) {
@@ -26,6 +27,7 @@ func initSdk(b *ArweaveBackend) (*sdk.SDK, error) {
 	}
 	return sdk, nil
 }
+
 func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
 	// sdk, err := initSdk(b)
 	// if err != nil {
@@ -47,6 +49,7 @@ func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
 	}
 	return &evt, nil
 }
+
 func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*paySchema.Transaction, string, error) {
 	sdk, err := initSdk(b)
 	if err != nil {

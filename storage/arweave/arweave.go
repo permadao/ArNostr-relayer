@@ -23,17 +23,21 @@ type ArweaveBackend struct {
 type Node struct {
 	Id string `json:"id"`
 }
+
 type PageInfo struct {
 	HasNextPage bool `json:"hasNextPage"`
 }
+
 type Edge struct {
 	Cursor string `json:"cursor"`
 	Node   `json:"node"`
 }
+
 type Transactions struct {
 	PageInfo `json:"pageInfo"`
 	Edges    []Edge `json:"edges"`
 }
+
 type QueryTransactions struct {
 	Transactions `json:"transactions"`
 }
@@ -41,13 +45,14 @@ type QueryTransactions struct {
 func (b *ArweaveBackend) Init() error {
 	return nil
 }
-func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) error {
-	_, _, err := UploadLoadEvent(b, evt)
+
+func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) {
+	_, itemid, err = UploadLoadEvent(b, evt)
 	if err != nil {
 		log.Println(err)
-		return err
+		return "", err
 	}
-	return nil
+	return itemid, nil
 }
 
 func (b *ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relayer.QueryEvents, err error) {
