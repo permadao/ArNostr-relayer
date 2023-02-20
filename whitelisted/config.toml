@@ -16,3 +16,6 @@ version = "0.1.0"
 
 [postgresql_db]
 	url = "host=localhost port=5432 user=postgres password=123 dbname=postgres sslmode=disable"
+
+[anti_spam]
+    filter_keywords_file = "your keywords to filter file path"

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"crypto/sha256"
 
@@ -22,6 +24,7 @@ type Relay struct {
 	Version          string
 	arweaveStorge    *arweave.ArweaveBackend
 	storage          *postgresql.PostgresBackend
+	filterKeywords   []string
 }
 
 func (r *Relay) Name() string {
@@ -50,6 +53,11 @@ func (r *Relay) Init() error {
 }
 
 func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
+	for _, kw := range r.filterKeywords {
+		if strings.Contains(evt.Content, kw) {
+			return false
+		}
+	}
 	// block events that are too large
 	jsonb, _ := json.Marshal(evt)
 	if len(jsonb) > 100000 {
@@ -73,6 +81,22 @@ func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
 	return true
 }
 
+func (r *Relay) loadFilterKeywords(filterKeywordsFile string) (err error) {
+	keywords := []string{}
+	dat, err := os.ReadFile(filterKeywordsFile)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(dat), "\n") {
+		word := strings.TrimSpace(line)
+		if word != "" {
+			keywords = append(keywords, word)
+		}
+	}
+	r.filterKeywords = keywords
+	return
+}
+
 // merge
 func main() {
 	// Read configs
@@ -87,6 +111,15 @@ func main() {
 	r := Relay{
 		PostgresDatabase: viper.GetString("postgresql_db.url"),
 		Version:          viper.GetString("service.version"),
+
+		filterKeywords: []string{},
+	}
+	filterKeywordsFile := viper.GetString("anti_spam.filter_keywords_file")
+	if filterKeywordsFile != "" {
+		err := r.loadFilterKeywords(filterKeywordsFile)
+		if err != nil {
+			panic(fmt.Sprintf("load filter keywords failed: %s", err.Error()))
+		}
 	}
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	r.arweaveStorge = &arweave.ArweaveBackend{
