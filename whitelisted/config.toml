@@ -18,4 +18,5 @@ version = "0.1.0"
 	url = "host=localhost port=5432 user=postgres password=123 dbname=postgres sslmode=disable"
 
 [anti_spam]
-    filter_keywords_file = "your keywords to filter file path"
+    filter_keywords_file = "" #your keywords to filter file path
+    blacklist_file = "" #your keywords to filter file path

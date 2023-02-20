@@ -25,6 +25,7 @@ type Relay struct {
 	arweaveStorge    *arweave.ArweaveBackend
 	storage          *postgresql.PostgresBackend
 	filterKeywords   []string
+	blacklist        []string
 }
 
 func (r *Relay) Name() string {
@@ -53,6 +54,11 @@ func (r *Relay) Init() error {
 }
 
 func (r *Relay) AcceptEvent(evt *nostr.Event) bool {
+	for _, key := range r.blacklist {
+		if evt.PubKey == key {
+			return false
+		}
+	}
 	for _, kw := range r.filterKeywords {
 		if strings.Contains(evt.Content, kw) {
 			return false
@@ -97,6 +103,22 @@ func (r *Relay) loadFilterKeywords(filterKeywordsFile string) (err error) {
 	return
 }
 
+func (r *Relay) loadBacklist(blacklistFile string) (err error) {
+	blacklist := []string{}
+	dat, err := os.ReadFile(blacklistFile)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(dat), "\n") {
+		pubkey := strings.TrimSpace(line)
+		if pubkey != "" {
+			blacklist = append(blacklist, pubkey)
+		}
+	}
+	r.blacklist = blacklist
+	return
+}
+
 // merge
 func main() {
 	// Read configs
@@ -111,14 +133,21 @@ func main() {
 	r := Relay{
 		PostgresDatabase: viper.GetString("postgresql_db.url"),
 		Version:          viper.GetString("service.version"),
-
-		filterKeywords: []string{},
+		filterKeywords:   []string{},
+		blacklist:        []string{},
 	}
 	filterKeywordsFile := viper.GetString("anti_spam.filter_keywords_file")
 	if filterKeywordsFile != "" {
 		err := r.loadFilterKeywords(filterKeywordsFile)
 		if err != nil {
 			panic(fmt.Sprintf("load filter keywords failed: %s", err.Error()))
+		}
+	}
+	blacklistFile := viper.GetString("anti_spam.blacklist_file")
+	if blacklistFile != "" {
+		err := r.loadFilterKeywords(blacklistFile)
+		if err != nil {
+			panic(fmt.Sprintf("load blacklist failed: %s", err.Error()))
 		}
 	}
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
