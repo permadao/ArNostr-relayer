@@ -8,16 +8,6 @@ import (
 )
 
 func (b *PostgresBackend) UpdateItemId(evt *nostr.Event, itemid string) error {
-	// react to different kinds of events
-	if evt.Kind == nostr.KindSetMetadata || evt.Kind == nostr.KindContactList || (10000 <= evt.Kind && evt.Kind < 20000) {
-		// delete past events from this user
-		b.DB.Exec(`DELETE FROM event WHERE pubkey = $1 AND kind = $2`, evt.PubKey, evt.Kind)
-	} else if evt.Kind == nostr.KindRecommendServer {
-		// delete past recommend_server events equal to this one
-		b.DB.Exec(`DELETE FROM event WHERE pubkey = $1 AND kind = $2 AND content = $3`,
-			evt.PubKey, evt.Kind, evt.Content)
-	}
-
 	// insert or update itemid
 	tagsj, _ := json.Marshal(evt.Tags)
 	res, err := b.DB.Exec(`
