@@ -3,7 +3,8 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	seedSchema "github.com/everFinance/arseeding/schema"
+	"github.com/everFinance/arseeding/sdk"
 	"time"
 
 	"github.com/everFinance/goar"
@@ -18,6 +19,8 @@ type ArweaveBackend struct {
 	PrivateKey    string
 	Currency      string
 	GraphEndpoint string
+	ArseedSDK     *sdk.SDK
+	ArseedOrderCh chan *seedSchema.RespOrder
 }
 
 type Node struct {
@@ -47,12 +50,33 @@ func (b *ArweaveBackend) Init() error {
 }
 
 func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) {
-	_, itemid, err = UploadLoadEvent(b, evt)
+	ord, err := UploadLoadEvent(b, evt)
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
-	return itemid, nil
+	b.ArseedOrderCh <- ord
+	return ord.ItemId, nil
+}
+
+func (b *ArweaveBackend) ListenAndPayOrders() {
+	ticker := time.NewTicker(5 * time.Second)
+	ords := make([]*seedSchema.RespOrder, 0, 500)
+	for {
+		select {
+		case ord := <-b.ArseedOrderCh:
+			ords = append(ords, ord)
+		case <-ticker.C:
+			if len(ords) > 0 {
+				_, err := b.ArseedSDK.BatchPayOrders(ords)
+				if err != nil {
+					fmt.Printf("b.ArseedSDK.BatchPayOrders(ords); err: %v \n", err)
+					continue
+				}
+				// clear ords
+				ords = make([]*seedSchema.RespOrder, 0, 500)
+			}
+		}
+	}
 }
 
 func (b *ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *relayer.QueryEvents, err error) {

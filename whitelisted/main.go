@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	schema2 "github.com/everFinance/arseeding/schema"
+	"github.com/everFinance/arseeding/sdk"
 	"log"
 	"os"
 	"strings"
@@ -50,6 +52,7 @@ func (r *Relay) BackupStorage() relayer.BackupStorage {
 }
 
 func (r *Relay) Init() error {
+	go r.arweaveStorge.ListenAndPayOrders()
 	return nil
 }
 
@@ -158,7 +161,17 @@ func main() {
 		PrivateKey:    viper.GetString("arweave.pk"),
 		Currency:      viper.GetString("arweave.pay_currency"),
 		GraphEndpoint: viper.GetString("arweave.graph_endpint"),
+		ArseedOrderCh: make(chan *schema2.RespOrder, 500),
 	}
+	eccSigner, err := goether.NewSigner(viper.GetString("arweave.pk"))
+	if err != nil {
+		panic(err)
+	}
+	arseedSdk, err := sdk.NewSDK(viper.GetString("arweave.arseed_url"), viper.GetString("arweave.everpay_url"), eccSigner)
+	if err != nil {
+		panic(err)
+	}
+	r.arweaveStorge.ArseedSDK = arseedSdk
 	if err := relayer.Start(&r); err != nil {
 		log.Fatalf("server terminated: %v", err)
 	}
