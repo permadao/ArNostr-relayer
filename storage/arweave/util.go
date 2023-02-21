@@ -3,36 +3,18 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
+	seedSchema "github.com/everFinance/arseeding/schema"
 	"log"
 	"strconv"
 	"time"
 
-	"github.com/everFinance/arseeding/sdk"
 	"github.com/everFinance/arseeding/sdk/schema"
-	paySchema "github.com/everFinance/everpay-go/pay/schema"
 	"github.com/everFinance/goar"
 	"github.com/everFinance/goar/types"
-	"github.com/everFinance/goether"
 	"github.com/nbd-wtf/go-nostr"
 )
 
-func initSdk(b *ArweaveBackend) (*sdk.SDK, error) {
-	eccSigner, err := goether.NewSigner(b.PrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	sdk, err := sdk.NewSDK(b.SeedUrl, b.PayUrl, eccSigner)
-	if err != nil {
-		panic(err)
-	}
-	return sdk, nil
-}
-
 func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
-	// sdk, err := initSdk(b)
-	// if err != nil {
-	// 	panic(err)
-	// }
 	arNode := b.GraphEndpoint
 	client := goar.NewClient(arNode)
 	// fmt.Printf("u:%s", id)
@@ -49,15 +31,9 @@ func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
 	}
 	return &evt, nil
 }
-
-func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*paySchema.Transaction, string, error) {
-	sdk, err := initSdk(b)
-	if err != nil {
-		panic(err)
-	}
+func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*seedSchema.RespOrder, error) {
 	uploadTime := strconv.FormatInt(time.Now().UnixNano(), 10)
 	eventTime := strconv.FormatInt(evt.CreatedAt.UnixNano(), 10)
-	// fmt.Println(b.Owner)
 	tags := []types.Tag{
 		{
 			Name:  "Content-Type",
@@ -88,13 +64,9 @@ func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*paySchema.Transactio
 			Value: eventTime,
 		},
 	}
-	event, err := json.Marshal(evt)
+	eventJs, err := json.Marshal(evt)
 	if err != nil {
-		log.Println(err)
-		return nil, "", err
+		return nil, err
 	}
-	tx, itemId, err := sdk.SendDataAndPay(event, b.Currency, &schema.OptionItem{Tags: tags}, false) // your account must have enough balance in everpay
-	fmt.Printf("itemId:%s", itemId)
-	fmt.Printf("hash:%s", tx.HexHash())
-	return tx, itemId, err
+	return b.ArseedSDK.SendData(eventJs, b.Currency, "", &schema.OptionItem{Tags: tags}, false)
 }

@@ -25,7 +25,6 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tidwall/gjson v1.14.1
 	golang.org/x/exp v0.0.0-20221106115401-f9659909a136
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -115,6 +114,7 @@ require (
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/h2non/gentleman.v2 v2.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/datatypes v1.0.1 // indirect
 	gorm.io/gorm v1.22.4 // indirect
 )
