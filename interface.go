@@ -29,6 +29,7 @@ type Relay interface {
 	Storage() Storage
 
 	BackupStorage() BackupStorage
+	Owner() string
 }
 
 // Auther is the interface for implementing NIP-42.
@@ -81,7 +82,7 @@ type Storage interface {
 	// SaveEvent is called once Relay.AcceptEvent reports true.
 	SaveEvent(event *nostr.Event) error
 	// RestoreEvent will load the event on the backup storage and store it
-	RestoreEvent(event *nostr.Event, isDelete bool) error
+	RestoreEvent(event *ArEvent, isDelete bool) error
 	// UpdateItemId update the itemid used by backup storage
 	UpdateItemId(event *nostr.Event, itemid string) error
 }

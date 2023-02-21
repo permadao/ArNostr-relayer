@@ -2,15 +2,14 @@ package relayer
 
 import (
 	"fmt"
-	"github.com/nbd-wtf/go-nostr"
 	"github.com/permadao/ArNostr-relayer/storage"
 )
 
-func RestoreEvent(relay Relay, evt nostr.Event) (accepted bool, message string) {
+func RestoreEvent(relay Relay, arEvent ArEvent) (accepted bool, message string) {
 	store := relay.Storage()
 	advancedDeleter, _ := store.(AdvancedDeleter)
 	advancedSaver, _ := store.(AdvancedSaver)
-
+	evt := arEvent.Event
 	if evt.Kind == 5 {
 		// event deletion -- nip09
 		for _, tag := range evt.Tags {
@@ -19,7 +18,7 @@ func RestoreEvent(relay Relay, evt nostr.Event) (accepted bool, message string) 
 					advancedDeleter.BeforeDelete(tag[1], evt.PubKey)
 				}
 
-				if err := store.RestoreEvent(&evt, true); err != nil {
+				if err := store.RestoreEvent(&arEvent, true); err != nil {
 					return false, fmt.Sprintf("error: failed to delete: %s", err.Error())
 				}
 
@@ -42,7 +41,7 @@ func RestoreEvent(relay Relay, evt nostr.Event) (accepted bool, message string) 
 			advancedSaver.BeforeSave(&evt)
 		}
 
-		if saveErr := store.RestoreEvent(&evt, false); saveErr != nil {
+		if saveErr := store.RestoreEvent(&arEvent, false); saveErr != nil {
 			switch saveErr {
 			case storage.ErrDupEvent:
 				return true, saveErr.Error()
