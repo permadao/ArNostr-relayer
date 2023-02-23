@@ -1,3 +1,5 @@
+# Rename this file to config.toml
+
 appname = "ArNostr"
 version = "0.1.0"
 
@@ -6,7 +8,7 @@ version = "0.1.0"
 	port = "8080"
 
 [arweave]
-	pk = ""
+	pk = "" # your priv key
 	everpay_url = "https://api.everpay.io"
 	arseed_url = "https://arseed.web3infra.dev"
     pay_currency = "usdc"
