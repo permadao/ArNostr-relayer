@@ -9,8 +9,12 @@ type StorgeFilter struct {
 	PageNum   int
 	RelayName string
 }
+type ArEvent struct {
+	Event  nostr.Event
+	ItemId string
+}
 type QueryEvents struct {
-	Events      []nostr.Event
+	Events      []ArEvent
 	Cursor      string
 	HasNextPage bool
 }

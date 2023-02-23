@@ -12,6 +12,7 @@ import (
 	"github.com/everFinance/goar"
 	"github.com/everFinance/goar/types"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/spf13/viper"
 )
 
 func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
@@ -45,7 +46,7 @@ func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*seedSchema.RespOrder
 		},
 		{
 			Name:  "App-Vesion",
-			Value: "0.1",
+			Value: viper.GetString("version"),
 		},
 		{
 			Name:  "Relay-Name",

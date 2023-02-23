@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/nbd-wtf/go-nostr"
+	relayer "github.com/permadao/ArNostr-relayer"
 	"github.com/permadao/ArNostr-relayer/storage"
 )
 
-func (b *PostgresBackend) RestoreEvent(evt *nostr.Event, isDelete bool) error {
+func (b *PostgresBackend) RestoreEvent(arEvent *relayer.ArEvent, isDelete bool) error {
 	// react to different kinds of events
+	evt := arEvent.Event
+	itemId := arEvent.ItemId
 	if evt.Kind == nostr.KindSetMetadata || evt.Kind == nostr.KindContactList || (10000 <= evt.Kind && evt.Kind < 20000) {
 		// delete past events from this user
 		b.DB.Exec(`DELETE FROM event WHERE pubkey = $1 AND kind = $2 AND created_at <=$3`, evt.PubKey, evt.Kind, evt.CreatedAt)
@@ -21,17 +24,18 @@ func (b *PostgresBackend) RestoreEvent(evt *nostr.Event, isDelete bool) error {
 	// insert
 	tagsj, _ := json.Marshal(evt.Tags)
 	res, err := b.DB.Exec(`
-        INSERT INTO event (id, pubkey, created_at, kind, tags, content, sig)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO event (id, pubkey, created_at, kind, tags, content, sig,itemid)
+        VALUES ($1, $2, $3, $4, $5, $6, $7,$9)
 		ON CONFLICT (id) DO UPDATE 
 		SET created_at = $3, 
 			kind = $4,
 			tags = $5,
 			content =$6,
 			sig =$7,
-			is_delete = $8
+			is_delete = $8,
+			itemid = $9
 		where event.created_at <$3 and  event.pubkey=$2
-    `, evt.ID, evt.PubKey, evt.CreatedAt.Unix(), evt.Kind, tagsj, evt.Content, evt.Sig, isDelete)
+    `, evt.ID, evt.PubKey, evt.CreatedAt.Unix(), evt.Kind, tagsj, evt.Content, evt.Sig, isDelete, itemId)
 	if err != nil {
 		return err
 	}

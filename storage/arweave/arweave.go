@@ -135,14 +135,19 @@ func (b *ArweaveBackend) QueryEvents(filter *relayer.StorgeFilter) (events *rela
 		queryEvents.HasNextPage = transactions.Transactions.HasNextPage
 		edges := transactions.Transactions.Edges
 
-		var events []nostr.Event
+		var events []relayer.ArEvent
 		for _, edge := range edges {
 			id := edge.Node.Id
+			fmt.Printf("id:%s", id)
 			evt, err := DownLoadContentById(b, id)
 			if err != nil {
 				panic(err)
 			}
-			events = append(events, *evt)
+			arEvent := relayer.ArEvent{
+				Event:  *evt,
+				ItemId: id,
+			}
+			events = append(events, arEvent)
 		}
 		queryEvents.Events = events
 		if len(edges) > 0 {

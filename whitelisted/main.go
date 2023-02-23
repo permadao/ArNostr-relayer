@@ -40,6 +40,16 @@ func (r *Relay) Name() string {
 	}
 	return name
 }
+func (r *Relay) Owner() string {
+	pk := viper.GetString("arweave.pk")
+	name := "anonymous"
+	if len(pk) > 0 {
+		s, _ := goether.NewSigner(pk)
+		addr := sha256.Sum256(s.GetPublicKey())
+		name = utils.Base64Encode(addr[:])
+	}
+	return name
+}
 
 func (r *Relay) OnInitialized(*relayer.Server) {}
 
@@ -155,7 +165,7 @@ func main() {
 	}
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	r.arweaveStorge = &arweave.ArweaveBackend{
-		Owner:         viper.GetString("appname"),
+		Owner:         r.Owner(),
 		PayUrl:        viper.GetString("arweave.everpay_url"),
 		SeedUrl:       viper.GetString("arweave.arseed_url"),
 		PrivateKey:    viper.GetString("arweave.pk"),
