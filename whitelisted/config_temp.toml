@@ -1,3 +1,5 @@
+# Rename this file to config.toml
+
 appname = "ArNostr"
 version = "0.1.0"
 
