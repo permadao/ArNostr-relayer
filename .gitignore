@@ -1,4 +1,4 @@
 *.env
 keywords.txt
 blacklist.txt
-*/config.toml
+config.toml
