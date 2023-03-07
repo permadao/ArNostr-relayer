@@ -61,8 +61,8 @@ func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) 
 }
 
 func (b *ArweaveBackend) ListenAndUpload() {
-	ticker := time.NewTicker(1 * time.Minute)
-	events := make([]types.BundleItem, 0, 1000)
+	ticker := time.NewTicker(10 * time.Second)
+	events := make([]types.BundleItem, 0, 2000)
 	for {
 		select {
 		case i := <-b.EventBunleItemCh:
@@ -73,7 +73,6 @@ func (b *ArweaveBackend) ListenAndUpload() {
 					{Name: "Bundle-Format", Value: "binary"},
 					{Name: "Bundle-Version", Value: "2.0.0"},
 				}
-
 				bundle, err := utils.NewBundle(events...)
 				if err != nil {
 					fmt.Printf("failed to create nested bundle; err: %v \n", err)
@@ -82,7 +81,7 @@ func (b *ArweaveBackend) ListenAndUpload() {
 
 				b.ArseedSDK.SendDataAndPay(bundle.BundleBinary, b.Currency, &schema.OptionItem{Tags: bundleTags}, false)
 				// clear events
-				events = make([]types.BundleItem, 0, 500)
+				events = make([]types.BundleItem, 0, 2000)
 			}
 		}
 	}
