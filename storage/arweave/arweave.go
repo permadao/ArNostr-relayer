@@ -61,15 +61,14 @@ func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) 
 }
 
 func (b *ArweaveBackend) ListenAndUpload() {
-	ticker := time.NewTicker(5 * time.Second)
-	events := make([]types.BundleItem, 0, 500)
+	ticker := time.NewTicker(1 * time.Minute)
+	events := make([]types.BundleItem, 0, 1000)
 	for {
 		select {
 		case i := <-b.EventBunleItemCh:
 			events = append(events, i)
 		case <-ticker.C:
-			if len(events) > 0 {
-
+			if len(events) > 0 && len(events) > 500 {
 				bundleTags := []types.Tag{
 					{Name: "Bundle-Format", Value: "binary"},
 					{Name: "Bundle-Version", Value: "2.0.0"},
