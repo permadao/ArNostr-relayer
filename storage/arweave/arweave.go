@@ -3,24 +3,26 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
-	seedSchema "github.com/everFinance/arseeding/schema"
-	"github.com/everFinance/arseeding/sdk"
 	"time"
 
+	"github.com/everFinance/arseeding/sdk"
+	"github.com/everFinance/arseeding/sdk/schema"
 	"github.com/everFinance/goar"
+	"github.com/everFinance/goar/types"
+	"github.com/everFinance/goar/utils"
 	"github.com/nbd-wtf/go-nostr"
 	relayer "github.com/permadao/ArNostr-relayer"
 )
 
 type ArweaveBackend struct {
-	Owner         string
-	PayUrl        string
-	SeedUrl       string
-	PrivateKey    string
-	Currency      string
-	GraphEndpoint string
-	ArseedSDK     *sdk.SDK
-	ArseedOrderCh chan *seedSchema.RespOrder
+	Owner            string
+	PayUrl           string
+	SeedUrl          string
+	PrivateKey       string
+	Currency         string
+	GraphEndpoint    string
+	ArseedSDK        *sdk.SDK
+	EventBunleItemCh chan types.BundleItem
 }
 
 type Node struct {
@@ -50,30 +52,38 @@ func (b *ArweaveBackend) Init() error {
 }
 
 func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) {
-	ord, err := UploadLoadEvent(b, evt)
+	i, err := UploadLoadEvent(b, evt)
 	if err != nil {
 		return "", err
 	}
-	b.ArseedOrderCh <- ord
-	return ord.ItemId, nil
+	b.EventBunleItemCh <- *i
+	return i.Id, nil
 }
 
-func (b *ArweaveBackend) ListenAndPayOrders() {
+func (b *ArweaveBackend) ListenAndUpload() {
 	ticker := time.NewTicker(5 * time.Second)
-	ords := make([]*seedSchema.RespOrder, 0, 500)
+	events := make([]types.BundleItem, 0, 500)
 	for {
 		select {
-		case ord := <-b.ArseedOrderCh:
-			ords = append(ords, ord)
+		case i := <-b.EventBunleItemCh:
+			events = append(events, i)
 		case <-ticker.C:
-			if len(ords) > 0 {
-				_, err := b.ArseedSDK.BatchPayOrders(ords)
+			if len(events) > 0 {
+
+				bundleTags := []types.Tag{
+					{Name: "Bundle-Format", Value: "binary"},
+					{Name: "Bundle-Version", Value: "2.0.0"},
+				}
+
+				bundle, err := utils.NewBundle(events...)
 				if err != nil {
-					fmt.Printf("b.ArseedSDK.BatchPayOrders(ords); err: %v \n", err)
+					fmt.Printf("failed to create nested bundle; err: %v \n", err)
 					continue
 				}
-				// clear ords
-				ords = make([]*seedSchema.RespOrder, 0, 500)
+
+				b.ArseedSDK.SendDataAndPay(bundle.BundleBinary, b.Currency, &schema.OptionItem{Tags: bundleTags}, false)
+				// clear events
+				events = make([]types.BundleItem, 0, 500)
 			}
 		}
 	}
