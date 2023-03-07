@@ -68,7 +68,7 @@ func (b *ArweaveBackend) ListenAndUpload() {
 		case i := <-b.EventBunleItemCh:
 			events = append(events, i)
 		case <-ticker.C:
-			if len(events) > 0 && len(events) > 500 {
+			if len(events) > 1000 {
 				bundleTags := []types.Tag{
 					{Name: "Bundle-Format", Value: "binary"},
 					{Name: "Bundle-Version", Value: "2.0.0"},

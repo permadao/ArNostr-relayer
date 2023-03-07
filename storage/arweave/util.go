@@ -67,6 +67,7 @@ func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*types.BundleItem, er
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("event:", evt.ID, evt.CreatedAt, evt.PubKey, evt.Kind, evt.Content, "\n")
 	bundleItem, err := b.ArseedSDK.ItemSigner.CreateAndSignItem(eventJs, "", "", tags)
 	return &bundleItem, err
 }
