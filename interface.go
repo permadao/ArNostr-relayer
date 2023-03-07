@@ -85,6 +85,7 @@ type Storage interface {
 	RestoreEvent(event *ArEvent, isDelete bool) error
 	// UpdateItemId update the itemid used by backup storage
 	UpdateItemId(event *nostr.Event, itemid string) error
+	QueryItemIdByEventId(eventId string) (id string, err error)
 }
 
 // Storage is a persistence layer for nostr events handled by a relay.

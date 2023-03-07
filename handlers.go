@@ -344,3 +344,10 @@ func (s *Server) handleNIP11(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(info)
 }
+func (s *Server) getItemId(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	eventId := r.URL.Query().Get("eventid")
+	storge := s.relay.Storage()
+	itemId, err := storge.QueryItemIdByEventId(eventId)
+	json.NewEncoder(w).Encode([]interface{}{"OK", itemId, err})
+}
