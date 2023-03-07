@@ -3,12 +3,10 @@ package arweave
 import (
 	"encoding/json"
 	"fmt"
-	seedSchema "github.com/everFinance/arseeding/schema"
 	"log"
 	"strconv"
 	"time"
 
-	"github.com/everFinance/arseeding/sdk/schema"
 	"github.com/everFinance/goar"
 	"github.com/everFinance/goar/types"
 	"github.com/nbd-wtf/go-nostr"
@@ -32,7 +30,7 @@ func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
 	}
 	return &evt, nil
 }
-func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*seedSchema.RespOrder, error) {
+func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*types.BundleItem, error) {
 	uploadTime := strconv.FormatInt(time.Now().UnixNano(), 10)
 	eventTime := strconv.FormatInt(evt.CreatedAt.UnixNano(), 10)
 	tags := []types.Tag{
@@ -69,5 +67,7 @@ func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*seedSchema.RespOrder
 	if err != nil {
 		return nil, err
 	}
-	return b.ArseedSDK.SendData(eventJs, b.Currency, "", &schema.OptionItem{Tags: tags}, false)
+	fmt.Println("event:", evt.ID, evt.CreatedAt, evt.PubKey, evt.Kind, evt.Content, "\n")
+	bundleItem, err := b.ArseedSDK.ItemSigner.CreateAndSignItem(eventJs, "", "", tags)
+	return &bundleItem, err
 }

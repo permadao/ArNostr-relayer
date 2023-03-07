@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	schema2 "github.com/everFinance/arseeding/schema"
-	"github.com/everFinance/arseeding/sdk"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/everFinance/arseeding/sdk"
+
 	"crypto/sha256"
 
+	"github.com/everFinance/goar/types"
 	"github.com/everFinance/goar/utils"
 	"github.com/everFinance/goether"
 	"github.com/nbd-wtf/go-nostr"
@@ -62,7 +63,7 @@ func (r *Relay) BackupStorage() relayer.BackupStorage {
 }
 
 func (r *Relay) Init() error {
-	go r.arweaveStorge.ListenAndPayOrders()
+	go r.arweaveStorge.ListenAndUpload()
 	return nil
 }
 
@@ -165,13 +166,13 @@ func main() {
 	}
 	r.storage = &postgresql.PostgresBackend{DatabaseURL: r.PostgresDatabase}
 	r.arweaveStorge = &arweave.ArweaveBackend{
-		Owner:         r.Owner(),
-		PayUrl:        viper.GetString("arweave.everpay_url"),
-		SeedUrl:       viper.GetString("arweave.arseed_url"),
-		PrivateKey:    viper.GetString("arweave.pk"),
-		Currency:      viper.GetString("arweave.pay_currency"),
-		GraphEndpoint: viper.GetString("arweave.graph_endpint"),
-		ArseedOrderCh: make(chan *schema2.RespOrder, 500),
+		Owner:            r.Owner(),
+		PayUrl:           viper.GetString("arweave.everpay_url"),
+		SeedUrl:          viper.GetString("arweave.arseed_url"),
+		PrivateKey:       viper.GetString("arweave.pk"),
+		Currency:         viper.GetString("arweave.pay_currency"),
+		GraphEndpoint:    viper.GetString("arweave.graph_endpint"),
+		EventBunleItemCh: make(chan types.BundleItem, 500),
 	}
 	eccSigner, err := goether.NewSigner(viper.GetString("arweave.pk"))
 	if err != nil {
