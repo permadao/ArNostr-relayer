@@ -13,6 +13,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
 	"github.com/nbd-wtf/go-nostr/nip42"
+	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 )
 
@@ -153,7 +154,7 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					// upload event to ar
-					if s.relay.AcceptEvent(&evt) {
+					if s.relay.AcceptEvent(&evt) && viper.GetBool("arweave.enable") {
 						go func() {
 							itemid, err := s.relay.BackupStorage().SaveEvent(&evt)
 							if err != nil {
