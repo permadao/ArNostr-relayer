@@ -349,5 +349,17 @@ func (s *Server) getItemId(w http.ResponseWriter, r *http.Request) {
 	eventId := r.URL.Query().Get("eventid")
 	storge := s.relay.Storage()
 	itemId, err := storge.QueryItemIdByEventId(eventId)
-	json.NewEncoder(w).Encode([]interface{}{"OK", itemId, err})
+	code := 0
+	errMessage := ""
+	if err != nil {
+		code = -1
+		errMessage = fmt.Sprintf("get item id failure with event id:%s,error message:%s", eventId, err.Error())
+	} else {
+		if len(itemId) == 0 {
+			code = 1
+			errMessage = "it dose not exist item id  with event id:" + eventId
+		}
+	}
+
+	json.NewEncoder(w).Encode([]interface{}{code, itemId, errMessage})
 }
