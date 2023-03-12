@@ -349,15 +349,15 @@ func (s *Server) getItemId(w http.ResponseWriter, r *http.Request) {
 	eventId := r.URL.Query().Get("eventid")
 	storge := s.relay.Storage()
 	itemId, err := storge.QueryItemIdByEventId(eventId)
-	code := 0
-	errMessage := ""
+	code := 200
+	errMessage := "success"
 	if err != nil {
-		code = -1
+		code = 500
 		errMessage = fmt.Sprintf("get item id failure with event id:%s,error message:%s", eventId, err.Error())
 	} else {
 		if len(itemId) == 0 {
-			code = 1
-			errMessage = "it dose not exist item id  with event id:" + eventId
+			code = 500
+			errMessage = "event has not yet been uploaded to Arweave, please try again later"
 		}
 	}
 
