@@ -161,3 +161,22 @@ func (b PostgresBackend) QueryEvents(filter *nostr.Filter) (events []nostr.Event
 
 	return events, nil
 }
+
+func (b PostgresBackend) QueryItemIdByEventId(eventId string) (id string, err error) {
+	query := b.DB.Rebind(`select itemid  from event where id=?  and is_delete=false limit 1`)
+
+	rows, err := b.DB.Query(query, eventId)
+	if err != nil && err != sql.ErrNoRows {
+		return "", fmt.Errorf("failed to fetch events using query %q: %w", query, err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&id)
+		if err != nil {
+			return "", fmt.Errorf("failed to scan row: %w", err)
+		}
+	}
+	return id, nil
+}

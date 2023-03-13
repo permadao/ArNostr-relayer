@@ -344,3 +344,22 @@ func (s *Server) handleNIP11(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(info)
 }
+func (s *Server) getItemId(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	eventId := r.URL.Query().Get("eventid")
+	storge := s.relay.Storage()
+	itemId, err := storge.QueryItemIdByEventId(eventId)
+	code := 200
+	errMessage := "success"
+	if err != nil {
+		code = 500
+		errMessage = fmt.Sprintf("get item id failure with event id:%s,error message:%s", eventId, err.Error())
+	} else {
+		if len(itemId) == 0 {
+			code = 500
+			errMessage = "event has not yet been uploaded to Arweave, please try again later"
+		}
+	}
+
+	json.NewEncoder(w).Encode([]interface{}{code, itemId, errMessage})
+}
