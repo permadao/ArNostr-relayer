@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/permadao/ArNostr-relayer/storage/arweave"
 	"net/http"
 	"time"
 
@@ -167,6 +168,20 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 								s.Log.Errorf("UpdateItemId error: %s, id: %s, itemid: %s", err.Error(), evt.ID, itemid)
 							}
 						}()
+
+						// generate bundle itemId and save to event extra
+						bs := s.relay.BackupStorage()
+						ab, ok := bs.(*arweave.ArweaveBackend)
+						if ok {
+							item, err := arweave.UploadLoadEvent(ab, &evt)
+							if err != nil {
+								s.Log.Errorf("arweave.UploadLoadEvent(ab,&evt); err:%v", err)
+							} else {
+								evt.SetExtra("itemId", item.Id)
+							}
+						} else {
+							s.Log.Errorf("bs.(*arweave.ArweaveBackend) failed")
+						}
 					}
 
 					if evt.Kind == 5 {
