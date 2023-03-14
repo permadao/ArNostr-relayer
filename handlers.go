@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/permadao/ArNostr-relayer/storage/arweave"
+	"github.com/everFinance/goar/types"
 	"net/http"
 	"time"
 
@@ -154,10 +154,17 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						ws.WriteJSON([]interface{}{"OK", evt.ID, false, "invalid: signature is invalid"})
 						return
 					}
-					// upload event to ar
+
 					if s.relay.AcceptEvent(&evt) && viper.GetBool("arweave.enable") {
-						go func() {
-							itemid, err := s.relay.BackupStorage().SaveEvent(&evt)
+						item, err := s.relay.BackupStorage().AssembleEventToItem(&evt)
+						if err != nil {
+							s.Log.Errorf("AssembleEventToItem err: ", err)
+							return
+						}
+
+						// upload event to ar
+						go func(item *types.BundleItem) {
+							itemid, err := s.relay.BackupStorage().SaveEvent(*item)
 							if err != nil {
 								s.Log.Errorf("Backupstorage error when storing events: ", err)
 								return
@@ -167,21 +174,10 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 							if err != nil {
 								s.Log.Errorf("UpdateItemId error: %s, id: %s, itemid: %s", err.Error(), evt.ID, itemid)
 							}
-						}()
+						}(item)
 
-						// generate bundle itemId and save to event extra
-						bs := s.relay.BackupStorage()
-						ab, ok := bs.(*arweave.ArweaveBackend)
-						if ok {
-							item, err := arweave.UploadLoadEvent(ab, &evt)
-							if err != nil {
-								s.Log.Errorf("arweave.UploadLoadEvent(ab,&evt); err:%v", err)
-							} else {
-								evt.SetExtra("itemId", item.Id)
-							}
-						} else {
-							s.Log.Errorf("bs.(*arweave.ArweaveBackend) failed")
-						}
+						// save to event extra
+						evt.SetExtra("itemId", item.Id)
 					}
 
 					if evt.Kind == 5 {

@@ -3,6 +3,7 @@ package relayer
 import (
 	"context"
 	"encoding/json"
+	"github.com/everFinance/goar/types"
 
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
@@ -98,7 +99,9 @@ type BackupStorage interface {
 	QueryEvents(filter *StorgeFilter) (events *QueryEvents, err error)
 
 	// SaveEvent is called once Relay.AcceptEvent reports true.
-	SaveEvent(event *nostr.Event) (string, error)
+	SaveEvent(eventItem types.BundleItem) (string, error)
+
+	AssembleEventToItem(evt *nostr.Event) (*types.BundleItem, error)
 }
 
 // AdvancedQuerier methods are called before and after [Storage.QueryEvents].

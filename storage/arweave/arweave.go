@@ -51,13 +51,9 @@ func (b *ArweaveBackend) Init() error {
 	return nil
 }
 
-func (b *ArweaveBackend) SaveEvent(evt *nostr.Event) (itemid string, err error) {
-	i, err := UploadLoadEvent(b, evt)
-	if err != nil {
-		return "", err
-	}
-	b.EventBunleItemCh <- *i
-	return i.Id, nil
+func (b *ArweaveBackend) SaveEvent(eventItem types.BundleItem) (itemid string, err error) {
+	b.EventBunleItemCh <- eventItem
+	return eventItem.Id, nil
 }
 
 func (b *ArweaveBackend) ListenAndUpload() {
