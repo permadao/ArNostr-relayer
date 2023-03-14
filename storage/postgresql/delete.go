@@ -1,6 +1,6 @@
 package postgresql
 
 func (b PostgresBackend) DeleteEvent(id string, pubkey string) error {
-	_, err := b.DB.Exec("DELETE FROM event WHERE id = $1 AND pubkey = $2", id, pubkey)
+	_, err := b.DB.Exec("UPDATE event  SET is_delete= true WHERE id = $1 AND pubkey = $2", id, pubkey)
 	return err
 }

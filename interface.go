@@ -27,6 +27,9 @@ type Relay interface {
 	AcceptEvent(*nostr.Event) bool
 	// Storage returns the relay storage implementation.
 	Storage() Storage
+
+	BackupStorage() BackupStorage
+	Owner() string
 }
 
 // Auther is the interface for implementing NIP-42.
@@ -78,6 +81,24 @@ type Storage interface {
 	DeleteEvent(id string, pubkey string) error
 	// SaveEvent is called once Relay.AcceptEvent reports true.
 	SaveEvent(event *nostr.Event) error
+	// RestoreEvent will load the event on the backup storage and store it
+	RestoreEvent(event *ArEvent, isDelete bool) error
+	// UpdateItemId update the itemid used by backup storage
+	UpdateItemId(event *nostr.Event, itemid string) error
+	QueryItemIdByEventId(eventId string) (id string, err error)
+}
+
+// Storage is a persistence layer for nostr events handled by a relay.
+type BackupStorage interface {
+	// Init is called at the very beginning by [Server.Start], after [Relay.Init],
+	// allowing a storage to initialize its internal resources.
+	Init() error
+
+	// QueryEvents is invoked upon a client's REQ as described in NIP-01.
+	QueryEvents(filter *StorgeFilter) (events *QueryEvents, err error)
+
+	// SaveEvent is called once Relay.AcceptEvent reports true.
+	SaveEvent(event *nostr.Event) (string, error)
 }
 
 // AdvancedQuerier methods are called before and after [Storage.QueryEvents].

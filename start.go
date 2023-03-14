@@ -12,23 +12,59 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/cors"
+	"github.com/spf13/viper"
 )
 
 // Settings specify initial startup parameters for Start and StartConf.
 type Settings struct {
-	Host string `envconfig:"HOST" default:"0.0.0.0"`
-	Port string `envconfig:"PORT" default:"8080"`
+	Host string
+	Port string
 }
 
 // Start calls StartConf with Settings parsed from the process environment.
 func Start(relay Relay) error {
-	var s Settings
-	if err := envconfig.Process("", &s); err != nil {
-		return fmt.Errorf("envconfig: %w", err)
+	// init the relay
+	if err := relay.Init(); err != nil {
+		return fmt.Errorf("relay init: %w", err)
+	}
+	if err := relay.Storage().Init(); err != nil {
+		return fmt.Errorf("storage init: %w", err)
+	}
+	// restore event from arweave
+	Restore(relay)
+
+	s := Settings{
+		Host: viper.GetString("service.host"),
+		Port: viper.GetString("service.port"),
 	}
 	return StartConf(s, relay)
+}
+func Restore(relay Relay) {
+	if !viper.GetBool("arweave.enable_restore") {
+		return
+	}
+
+	filter := StorgeFilter{
+		PageNum: viper.GetInt("arweave.batchSize"),
+	}
+	for {
+		queryEvents, err := relay.BackupStorage().QueryEvents(&filter)
+		if err != nil {
+			log.Fatalf("restore event error:%v", err)
+		}
+		for _, event := range queryEvents.Events {
+			// fmt.Printf("%v", event)
+			isSuccess, msg := RestoreEvent(relay, event)
+			if !isSuccess {
+				log.Fatalf("restore event error:%s", msg)
+			}
+		}
+		if !queryEvents.HasNextPage {
+			return
+		}
+		filter.Cursor = queryEvents.Cursor
+	}
 }
 
 // StartConf creates a new Server, passing it host:port for the address,
@@ -81,6 +117,7 @@ func NewServer(addr string, relay Relay) *Server {
 	srv.router.Path("/").Headers("Upgrade", "websocket").HandlerFunc(srv.handleWebsocket)
 	srv.router.Path("/").Headers("Accept", "application/nostr+json").HandlerFunc(srv.handleNIP11)
 	srv.router.Path("/info").HandlerFunc(srv.handleNIP11)
+	srv.router.Path("/item").HandlerFunc(srv.getItemId)
 	return srv
 }
 
@@ -127,13 +164,13 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startListener(ln net.Listener) error {
-	// init the relay
-	if err := s.relay.Init(); err != nil {
-		return fmt.Errorf("relay init: %w", err)
-	}
-	if err := s.relay.Storage().Init(); err != nil {
-		return fmt.Errorf("storage init: %w", err)
-	}
+	// // init the relay
+	// if err := s.relay.Init(); err != nil {
+	// 	return fmt.Errorf("relay init: %w", err)
+	// }
+	// if err := s.relay.Storage().Init(); err != nil {
+	// 	return fmt.Errorf("storage init: %w", err)
+	// }
 
 	// push events from implementations, if any
 	if inj, ok := s.relay.(Injector); ok {

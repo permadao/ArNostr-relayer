@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS event (
   tags jsonb NOT NULL,
   content text NOT NULL,
   sig text NOT NULL,
+  is_delete boolean default false,
+  itemid text,
 
   tagvalues text[] GENERATED ALWAYS AS (tags_to_tagvalues(tags)) STORED
 );

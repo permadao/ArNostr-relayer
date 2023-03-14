@@ -1,1 +1,4 @@
 *.env
+keywords.txt
+blacklist.txt
+config.toml

@@ -13,6 +13,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
 	"github.com/nbd-wtf/go-nostr/nip42"
+	"github.com/spf13/viper"
 	"golang.org/x/exp/slices"
 )
 
@@ -124,7 +125,7 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 					notice = "request has less than 2 parameters"
 					return
 				}
-
+				// fmt.Printf("%s",request[1])
 				var typ string
 				json.Unmarshal(request[0], &typ)
 
@@ -151,6 +152,21 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 					} else if !ok {
 						ws.WriteJSON([]interface{}{"OK", evt.ID, false, "invalid: signature is invalid"})
 						return
+					}
+					// upload event to ar
+					if s.relay.AcceptEvent(&evt) && viper.GetBool("arweave.enable") {
+						go func() {
+							itemid, err := s.relay.BackupStorage().SaveEvent(&evt)
+							if err != nil {
+								s.Log.Errorf("Backupstorage error when storing events: ", err)
+								return
+							}
+							// update event in db
+							err = store.UpdateItemId(&evt, itemid)
+							if err != nil {
+								s.Log.Errorf("UpdateItemId error: %s, id: %s, itemid: %s", err.Error(), evt.ID, itemid)
+							}
+						}()
 					}
 
 					if evt.Kind == 5 {
@@ -308,7 +324,7 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleNIP11(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	supportedNIPs := []int{9, 12, 15, 16, 20}
+	supportedNIPs := []int{1, 9, 12, 15, 16, 20}
 	if _, ok := s.relay.(Auther); ok {
 		supportedNIPs = append(supportedNIPs, 42)
 	}
@@ -328,4 +344,23 @@ func (s *Server) handleNIP11(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(info)
+}
+func (s *Server) getItemId(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	eventId := r.URL.Query().Get("eventid")
+	storge := s.relay.Storage()
+	itemId, err := storge.QueryItemIdByEventId(eventId)
+	code := 200
+	errMessage := "success"
+	if err != nil {
+		code = 500
+		errMessage = fmt.Sprintf("get item id failure with event id:%s,error message:%s", eventId, err.Error())
+	} else {
+		if len(itemId) == 0 {
+			code = 500
+			errMessage = "event has not yet been uploaded to Arweave, please try again later"
+		}
+	}
+
+	json.NewEncoder(w).Encode([]interface{}{code, itemId, errMessage})
 }
