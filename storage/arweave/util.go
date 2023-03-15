@@ -30,7 +30,7 @@ func DownLoadContentById(b *ArweaveBackend, id string) (*nostr.Event, error) {
 	}
 	return &evt, nil
 }
-func UploadLoadEvent(b *ArweaveBackend, evt *nostr.Event) (*types.BundleItem, error) {
+func (b *ArweaveBackend) AssembleEventToItem(evt *nostr.Event) (*types.BundleItem, error) {
 	uploadTime := strconv.FormatInt(time.Now().UnixNano(), 10)
 	eventTime := strconv.FormatInt(evt.CreatedAt.UnixNano(), 10)
 	tags := []types.Tag{

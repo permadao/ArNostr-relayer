@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/everFinance/goar/types"
 	"net/http"
 	"time"
 
@@ -153,10 +154,17 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						ws.WriteJSON([]interface{}{"OK", evt.ID, false, "invalid: signature is invalid"})
 						return
 					}
-					// upload event to ar
+
 					if s.relay.AcceptEvent(&evt) && viper.GetBool("arweave.enable") {
-						go func() {
-							itemid, err := s.relay.BackupStorage().SaveEvent(&evt)
+						item, err := s.relay.BackupStorage().AssembleEventToItem(&evt)
+						if err != nil {
+							s.Log.Errorf("AssembleEventToItem err: ", err)
+							return
+						}
+
+						// upload event to ar
+						go func(item *types.BundleItem) {
+							itemid, err := s.relay.BackupStorage().SaveEvent(*item)
 							if err != nil {
 								s.Log.Errorf("Backupstorage error when storing events: ", err)
 								return
@@ -166,7 +174,10 @@ func (s *Server) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 							if err != nil {
 								s.Log.Errorf("UpdateItemId error: %s, id: %s, itemid: %s", err.Error(), evt.ID, itemid)
 							}
-						}()
+						}(item)
+
+						// save to event extra
+						evt.SetExtra("itemId", item.Id)
 					}
 
 					if evt.Kind == 5 {
